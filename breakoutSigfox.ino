@@ -9,7 +9,6 @@
 #include "serialWisollib.h";
 #include "mainTransducers.h";
 /********************** GLOBAL SCOPE VARIABLES *************************/
-volatile bool flagUpdateDataCloud = false;  // Bandera para ejecutar la funcion de lectura de variables de sensores
 // {volatile variables for TIMER1}
 volatile int minutes = 0; // contador de minutos
 volatile int seconds = 0; // contador de segundos

@@ -8,25 +8,38 @@
 #ifndef mainTransducers_h
 #define mainTransducers_h
 #include "Arduino.h";
+#include <max6675.h>
 #include "serialWisollib.h";
 #include <TimerOne.h>
 /********************** GLOBAL SCOPE VARIABLES *************************/
+volatile bool flagUpdateDataCloud = false;  // Bandera para ejecutar la funcion de lectura de variables de sensores
+
 int humBuffer = 0;
 int tempBuffer = 0;
 float humVolts = 0;
 float tempVolts = 0;
 uint8_t crudeTempData = 0; // Datos de Temperatura a 1byte
 uint16_t crudeHumData = 0; // Datos de Humedad a 2 bytes
+uint16_t crudeThermopairData = 0; // Datos de Temperatura de Termopar a 2bytes
 byte statusDoor = 0;
 byte statusAC = 1;
+
+float tempThermopair = 0; //  Datos de Temperatura de termopar
+/********************* PUERTOS DIGITALES SPI **************************/
+uint8_t ktcS0=11;
+uint8_t ktcCS=12;
+uint8_t ktcCLK=13;
 /********************* PUERTOS ANALOGICOS *******************************/
 byte humPort = A5;  //Numero de puerto analogico para sensor de humedad
 byte tempPort = A0; //Numero de puerto analogico para sensor de temperatura
-/************************ FUNCTION PROTOTYPES **************************/
+/************************ FUNCTIONES PREDEFINIDAS **************************/
+MAX6675 ktc(ktcCLK, ktcCS, ktcS0);  // Determinando puerto SPI
+/************************ FUNCTIONES PROTOTIPO **************************/
 void initTransducers(void); // Inicializa el puerto serial del modulo Wisol, entradas analogicas de sensores etc...
 void readAndSendData (void); // Funcion rutina para leer y enviar los valores obtenidos de los sensores a la nube
 float readTempData (void); // Lee el sensor de temperatura, devuelve un valor flotante
 float readHumData (void);  // Lee el sensor de humedad, devuelve un valor flotante
+float readThermocoupleData(void);
 
 wisolDev devModule; //declaramos el modulo como un objeto
 
@@ -40,22 +53,15 @@ void readAndSendData(void)
 {
  devModule.clearBuffer(); // Limpiamos buffer de Payload
  devModule.initPayload(); // Iniciamos la trama de Payload
-
+//----------------- Lectura de Humedad Relativa de Site ---------------
  crudeHumData = (readHumData()*10); // Leemos humedad relativa
- //Serial.print("Crude Value Hum -> ");
- //Serial.print(crudeHumData);
  devModule.addTwoBytes(crudeHumData); // Añadimos el valor leído al buffer
-
- 
-//-------------------------------------------------------------------
+//----------------- Lectura de Temperatura Ambiente de Site -----------
  crudeTempData = readTempData();  // Leemos temperatura
- //Serial.print("    Crude Value Temp -> ");
- //Serial.print(crudeTempData);
-
- devModule.addOneByte(crudeTempData); // Añadimos el valor leído al buffer
- //Serial.print("   Payload buffer -> ");
- //Serial.println(devModule.bufer);
- 
+ devModule.addOneByte(crudeTempData); // Añadimos el valor leído al buffer 
+//----------------- Lectura de Temperatura de Transmisor -------------- 
+crudeThermopairData = readThermocoupleData();
+devModule.addTwoBytes(crudeThermopairData);
 //------------------------------------------------------------------- 
  devModule.sendPayload(); // Envíamos la trama de Payload al servidor Sifgox
  Serial.print("\n");
@@ -94,5 +100,18 @@ float readTempData (void)
    return 0.00001;
   } 
 }
-/***********************************************************************/
+/************************** FUNCION PARA LEER SENSOR DE TEMPERATURA DE TRANSMISOR ****************************************/
+float readThermocoupleData(void)
+{
+  tempThermopair = ktc.readCelsius();
+  
+  if(tempThermopair > 0)
+  {
+    return tempThermopair * 100;
+  }
+  else{
+    return 0.00001;
+  }
+}
+/***********************************************************************************************/
 #endif
