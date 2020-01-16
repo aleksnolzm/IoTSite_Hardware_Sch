@@ -26,9 +26,9 @@ byte statusAC = 1;
 
 float tempThermopair = 0; //  Datos de Temperatura de termopar
 /********************* PUERTOS DIGITALES SPI **************************/
-uint8_t ktcS0=11;
-uint8_t ktcCS=12;
-uint8_t ktcCLK=13;
+unsigned int ktcS0=11;
+unsigned int ktcCS=12;
+unsigned int ktcCLK=13;
 /********************* PUERTOS ANALOGICOS *******************************/
 byte humPort = A5;  //Numero de puerto analogico para sensor de humedad
 byte tempPort = A0; //Numero de puerto analogico para sensor de temperatura
@@ -42,7 +42,6 @@ float readHumData (void);  // Lee el sensor de humedad, devuelve un valor flotan
 float readThermocoupleData(void);
 
 wisolDev devModule; //declaramos el modulo como un objeto
-
 /****************************** SETUP PORTS ************************************************/
 void initTransducers (void)
 {

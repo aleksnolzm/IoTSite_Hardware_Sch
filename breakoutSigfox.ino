@@ -30,11 +30,11 @@ void setup(void)
    {
       while(flagUpdateDataCloud)
       {
-          readAndSendData(); // Leemos y enviamos los valores de los sensores a la nube Sigfox   
-          noInterrupts();
-          flagUpdateDataCloud=false;
-          interrupts();
-       }
+         readAndSendData(); // Leemos y enviamos los valores de los sensores a la nube Sigfox   
+         noInterrupts();
+         flagUpdateDataCloud=false;
+         interrupts();
+      }
    }
 
 /*********************** FUNCION PARA ENVIO DE INFORMACION PROGRAMADO POR TIMER ******************************/
