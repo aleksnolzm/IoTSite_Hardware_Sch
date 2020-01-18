@@ -42,7 +42,7 @@ void setup(void)
    {
       noInterrupts();
     
-      if(seconds==59){
+      if(seconds==60){
         seconds=0;
         minutes++;
       }
