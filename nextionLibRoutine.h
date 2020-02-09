@@ -3,16 +3,13 @@
 #define nextionLibRoutine_h
 #include "Arduino.h";
 #include "Nextion.h"
-#include "max6675.h"
 
 /******************************* VARIABLES GLOBALES EN SCOPE  **********************************+******/
-float tempTxSite = 0; // Temperatura del Transmisor
+
 int int_Progress0 = 0; // Barra de estado de Temperatura del Transmisor
 
-float tempSite = 0; // Temperatura ambiente del Site
 int int_Progress1 = 0; // Barra de estado de Temperatura ambiente del Site
 
-float humSite = 0; // Temperatura del site
 int int_Progress2 = 0; // Barra de estado de Humedad del Site
 
 /********************** J0 N0 DECLARACION OBJETO TEMPERATURA DE TRANSMISOR ****************************/
@@ -22,18 +19,18 @@ NexProgressBar j0 = NexProgressBar(1, 3, "j0");
 
 /********************** J1 N1 DECLARACION OBJETO TEMPERATURA AMBIENTE DE SITE *************************/
 //pagina 2
-NexProgressBar j1 = NexProgressBar(2, 3, "j1");
 NexNumber n1 = NexNumber(2, 5, "n1");
+NexProgressBar j1 = NexProgressBar(2, 3, "j1");
 
 /********************** J2 N2 DECLARACION OBJETO HUMEDAD RELATIVA DE SITE **********************+******/
 //pagina 3
-NexProgressBar j2 = NexProgressBar(3, 2, "j2");
 NexNumber n2 = NexNumber(3, 3, "n2");
+NexProgressBar j2 = NexProgressBar(3, 2, "j2");
 
 /****************************************************************************************************+*/
 /********************** PROTOTPIPO DE FUNCIONES PARA DISPLAY NEXTION **********************************/
 void setupNextion(void);
-void sendDataNextion(float &dataTempTxSite, float &dataTempSite, float &dataHumSite);
+void sendDataNextion(uint8_t dataTempTxSiteDisp, uint8_t dataTempSiteDisp, uint16_t dataHumSiteDisp);
 
 
 /********************** FUNCIONES DE DISPLAY NEXTION **********************+******/
@@ -42,11 +39,13 @@ void setupNextion(void) {
   nexInit(); //inicializar la pantalla
 }
 
-void sendDataNextion(float &dataTempTxSiteDisp, float &dataTempSiteDisp, float &dataHumSiteDisp) {
+void sendDataNextion(uint8_t dataTempTxSiteDisp, uint8_t dataTempSiteDisp, uint16_t dataHumSiteDisp) {
   
   // Temperatura TX Site         => n0  => j0
   // Temperatura Ambiente Site   => n1  => j1
   // Humedad Relativa Site       => n2  => j2
+
+  nexLoop(NULL); // Service the Nextion display
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   n0.setValue(dataTempTxSiteDisp);
@@ -59,7 +58,6 @@ void sendDataNextion(float &dataTempTxSiteDisp, float &dataTempSiteDisp, float &
   j1.setValue(int_Progress1);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-
   n2.setValue((dataHumSiteDisp /10));
   int_Progress2 = ((dataHumSiteDisp /10 ));
   j2.setValue(int_Progress2);

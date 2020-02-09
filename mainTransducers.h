@@ -57,21 +57,22 @@ void readAndSendData(void)
   devModule.initPayload(); // Iniciamos la trama de Payload
 //----------------- Lectura de Humedad Relativa de Site ---------------
   crudeHumData = (readHumData()*10); // Leemos humedad relativa
-  devModule.addTwoBytes(crudeHumData); // Añadimos el valor leído al buffer
+  devModule.addTwoBytes(crudeHumData); // Añadimos el valor leído al buffer 
 //----------------- Lectura de Temperatura Ambiente de Site -----------
   crudeTempData = readTempData();  // Leemos temperatura
   devModule.addOneByte(crudeTempData); // Añadimos el valor leído al buffer 
 //----------------- Lectura de Temperatura de Transmisor -------------- 
   crudeThermopairData = readThermocoupleData();
-  devModule.addOneBytes(crudeThermopairData);
+  devModule.addOneByte(crudeThermopairData);
 //----------------------------------------------------------------------
 
-  
-  serial.print(crudeHumData);
-  serial.print(" ");
-  serial.print(crudeTempData);
-  serial.print(" ");
-  serial.println(crudeThermopairData);
+  Serial.print(crudeHumData);
+  Serial.print("%RH ");
+  Serial.print(crudeTempData);
+  Serial.print("ºC Tx  ");
+  Serial.print(crudeThermopairData);
+  Serial.println("ºC Site  ");
+  Serial.println(devModule.bufer);
 
   sendDataNextion(crudeThermopairData, crudeTempData, crudeHumData);
 
@@ -79,6 +80,7 @@ void readAndSendData(void)
   devModule.sendPayload(); // Envíamos la trama de Payload al servidor Sifgox
   Serial1.print("\n");
   devModule.clearBuffer(); // Limpiamos buffer de Payload
+  Serial.println("Payload OK");
 
 }
 
@@ -87,6 +89,7 @@ void readAndSendData(void)
 float readHumData (void)
 {
   humBuffer = analogRead(humPort);
+  delay(40);
   
   humVolts = humBuffer*0.00488759; //85532747;
     
@@ -102,6 +105,7 @@ float readHumData (void)
 float readTempData (void)
 {
   tempBuffer = analogRead(tempPort);
+  delay(15);
    
   tempVolts = tempBuffer*0.00488759; //85532747;
     
@@ -117,6 +121,7 @@ float readTempData (void)
 float readThermocoupleData(void)
 {
   tempThermopair = ktc.readCelsius();
+  delay(15);
   
   if(tempThermopair > 0)
   {
