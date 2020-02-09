@@ -11,6 +11,7 @@
 #include <max6675.h>
 #include "serialWisollib.h";
 #include <TimerOne.h>
+#include "nextionLibRoutine.h";
 /********************** GLOBAL SCOPE VARIABLES *************************/
 volatile bool flagUpdateDataCloud = false;  // Bandera para ejecutar la funcion de lectura de variables de sensores
 
@@ -20,7 +21,7 @@ float humVolts = 0;
 float tempVolts = 0;
 uint8_t crudeTempData = 0; // Datos de Temperatura a 1byte
 uint16_t crudeHumData = 0; // Datos de Humedad a 2 bytes
-uint16_t crudeThermopairData = 0; // Datos de Temperatura de Termopar a 2bytes
+uint8_t crudeThermopairData = 0; // Datos de Temperatura de Termopar a 2bytes
 byte statusDoor = 0;
 byte statusAC = 1;
 
@@ -45,26 +46,39 @@ wisolDev devModule; //declaramos el modulo como un objeto
 /****************************** SETUP PORTS ************************************************/
 void initTransducers (void)
 {
+    Serial.begin(9600);
+    setupNextion();
     devModule.wisolDevInit(); //inicializamos el modulo
 }
 /****************************** MAIN READING SENSORS VARIABLES ******************************/
 void readAndSendData(void) 
 {
- devModule.clearBuffer(); // Limpiamos buffer de Payload
- devModule.initPayload(); // Iniciamos la trama de Payload
+  devModule.clearBuffer(); // Limpiamos buffer de Payload
+  devModule.initPayload(); // Iniciamos la trama de Payload
 //----------------- Lectura de Humedad Relativa de Site ---------------
- crudeHumData = (readHumData()*10); // Leemos humedad relativa
- devModule.addTwoBytes(crudeHumData); // Añadimos el valor leído al buffer
+  crudeHumData = (readHumData()*10); // Leemos humedad relativa
+  devModule.addTwoBytes(crudeHumData); // Añadimos el valor leído al buffer
 //----------------- Lectura de Temperatura Ambiente de Site -----------
- crudeTempData = readTempData();  // Leemos temperatura
- devModule.addOneByte(crudeTempData); // Añadimos el valor leído al buffer 
+  crudeTempData = readTempData();  // Leemos temperatura
+  devModule.addOneByte(crudeTempData); // Añadimos el valor leído al buffer 
 //----------------- Lectura de Temperatura de Transmisor -------------- 
-crudeThermopairData = readThermocoupleData();
-devModule.addTwoBytes(crudeThermopairData);
-//------------------------------------------------------------------- 
- devModule.sendPayload(); // Envíamos la trama de Payload al servidor Sifgox
- Serial.print("\n");
- devModule.clearBuffer(); // Limpiamos buffer de Payload
+  crudeThermopairData = readThermocoupleData();
+  devModule.addOneBytes(crudeThermopairData);
+//----------------------------------------------------------------------
+
+  
+  serial.print(crudeHumData);
+  serial.print(" ");
+  serial.print(crudeTempData);
+  serial.print(" ");
+  serial.println(crudeThermopairData);
+
+  sendDataNextion(crudeThermopairData, crudeTempData, crudeHumData);
+
+//----------------------------------------------------------------------
+  devModule.sendPayload(); // Envíamos la trama de Payload al servidor Sifgox
+  Serial1.print("\n");
+  devModule.clearBuffer(); // Limpiamos buffer de Payload
 
 }
 
@@ -106,7 +120,7 @@ float readThermocoupleData(void)
   
   if(tempThermopair > 0)
   {
-    return tempThermopair * 100;
+    return tempThermopair;
   }
   else{
     return 0.00001;

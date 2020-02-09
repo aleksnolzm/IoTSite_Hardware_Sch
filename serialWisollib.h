@@ -31,10 +31,10 @@ wisolDev::wisolDevInit()
 {
   
   bufer = " ";
-	Serial.begin(9600);
+	Serial1.begin(9600);
 	pinMode(enableModule, OUTPUT);   //enable modulo wisol
 	bufer="AT\n";
-  Serial.print(bufer);
+  Serial1.print(bufer);
   delay(1000);
   bufer = " "; 
 }
@@ -58,11 +58,11 @@ void wisolDev::sendPayload()
   digitalWrite(enableModule, HIGH);
   delay(1000);
   //Reset del canal para asegurar que manda en la frecuencia correcta
-  Serial.print("AT$RC\n"); 
+  Serial1.print("AT$RC\n"); 
   delay(1000);
   //************************
   //Enviamos la informacion por sigfox
-  Serial.print(bufer);
+  Serial1.print(bufer);
   delay(3800);
   //deshabilitamos el modulo Sigfox
   digitalWrite(enableModule, LOW);
