@@ -13,6 +13,7 @@
 volatile int minutes = 0; // contador de minutos
 volatile int seconds = 0; // contador de segundos
 volatile int minutesSet = 10;  // Variable para establecer envio de datos cada 10 minutos
+volatile bool ledStatus = false;
 /************************ FUNCTION SETUP  ************************************/
 void setup(void)
    {  
@@ -21,8 +22,11 @@ void setup(void)
        Timer1.attachInterrupt(triggerPayload); // Activa la interrupcion y la asocia a ISR_Blink TIMEON
 
        attachInterrupt(digitalPinToInterrupt(2), sendForcedPayload, RISING);
+       //attachInterrupt(digitalPinToInterrupt(2), sendForcedPayload, FALLING);
        initTransducers(); // Inicializamos a los sensores y el modulo Wisol
        Serial.begin(9600);
+
+       pinMode(8, OUTPUT); //LED 
    }
 
 /******************************* RUTINA PRINCIPAL **************************************/
@@ -30,11 +34,20 @@ void setup(void)
    {
       while(flagUpdateDataCloud)
       {
-         readAndSendData(); // Leemos y enviamos los valores de los sensores a la nube Sigfox   
+         performUplink(); // Leemos y enviamos los valores de los sensores a la nube Sigfox   
          noInterrupts();
          flagUpdateDataCloud=false;
          interrupts();
       }
+      while(flagUpdateDataCloud==false)
+     {  digitalWrite(8,true);
+         delay(20);
+        digitalWrite(8,false);
+        readVariables();
+        delay(500);
+
+     } 
+      
    }
 
 /*********************** FUNCION PARA ENVIO DE INFORMACION PROGRAMADO POR TIMER ******************************/

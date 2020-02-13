@@ -25,7 +25,7 @@ uint8_t crudeThermopairData = 0; // Datos de Temperatura de Termopar a 2bytes
 byte statusDoor = 0;
 byte statusAC = 1;
 
-float tempThermopair = 0; //  Datos de Temperatura de termopar
+volatile float tempThermopair = 0; //  Datos de Temperatura de termopar
 /********************* PUERTOS DIGITALES SPI **************************/
 unsigned int ktcS0=11;
 unsigned int ktcCS=12;
@@ -37,10 +37,11 @@ byte tempPort = A0; //Numero de puerto analogico para sensor de temperatura
 MAX6675 ktc(ktcCLK, ktcCS, ktcS0);  // Determinando puerto SPI
 /************************ FUNCTIONES PROTOTIPO **************************/
 void initTransducers(void); // Inicializa el puerto serial del modulo Wisol, entradas analogicas de sensores etc...
-void readAndSendData (void); // Funcion rutina para leer y enviar los valores obtenidos de los sensores a la nube
+void performUplink (void); // Funcion rutina para leer y enviar los valores obtenidos de los sensores a la nube
 float readTempData (void); // Lee el sensor de temperatura, devuelve un valor flotante
 float readHumData (void);  // Lee el sensor de humedad, devuelve un valor flotante
-float readThermocoupleData(void);
+float readThermocoupleData(void); // Lee el termopar
+void readVariables(void);
 
 wisolDev devModule; //declaramos el modulo como un objeto
 /****************************** SETUP PORTS ************************************************/
@@ -51,37 +52,30 @@ void initTransducers (void)
     devModule.wisolDevInit(); //inicializamos el modulo
 }
 /****************************** MAIN READING SENSORS VARIABLES ******************************/
-void readAndSendData(void) 
+void performUplink(void) 
 {
+  
+//----------------- Lee Variables de entorno ---------------
+ 
+  readVariables();
+
+//----------------------------------------------------------------------
+  Serial.println("Wait a moment please...");
   devModule.clearBuffer(); // Limpiamos buffer de Payload
   devModule.initPayload(); // Iniciamos la trama de Payload
-//----------------- Lectura de Humedad Relativa de Site ---------------
-  crudeHumData = (readHumData()*10); // Leemos humedad relativa
-  devModule.addTwoBytes(crudeHumData); // Añadimos el valor leído al buffer 
-//----------------- Lectura de Temperatura Ambiente de Site -----------
-  crudeTempData = readTempData();  // Leemos temperatura
-  devModule.addOneByte(crudeTempData); // Añadimos el valor leído al buffer 
-//----------------- Lectura de Temperatura de Transmisor -------------- 
-  crudeThermopairData = readThermocoupleData();
-  devModule.addOneByte(crudeThermopairData);
-//----------------------------------------------------------------------
 
-  Serial.print(crudeHumData);
-  Serial.print("%RH ");
-  Serial.print(crudeTempData);
-  Serial.print("ºC Tx  ");
-  Serial.print(crudeThermopairData);
-  Serial.println("ºC Site  ");
+  devModule.addTwoBytes(crudeHumData); // Añadimos el valor leído al buffer
+  devModule.addOneByte(crudeTempData); // Añadimos el valor leído al buffer 
+  devModule.addOneByte(crudeThermopairData);
+  
+  Serial.print("Payload Status: ");
   Serial.println(devModule.bufer);
 
-  sendDataNextion(crudeThermopairData, crudeTempData, crudeHumData);
-
-//----------------------------------------------------------------------
   devModule.sendPayload(); // Envíamos la trama de Payload al servidor Sifgox
   Serial1.print("\n");
   devModule.clearBuffer(); // Limpiamos buffer de Payload
-  Serial.println("Payload OK");
-
+  Serial.println("Payload OK!");
+  Serial.println(" ");
 }
 
 
@@ -105,7 +99,7 @@ float readHumData (void)
 float readTempData (void)
 {
   tempBuffer = analogRead(tempPort);
-  delay(15);
+  delay(50);
    
   tempVolts = tempBuffer*0.00488759; //85532747;
     
@@ -132,4 +126,25 @@ float readThermocoupleData(void)
   }
 }
 /***********************************************************************************************/
+void readVariables(void){
+
+  //----------------- Lectura de Humedad Relativa de Site ---------------
+  crudeHumData = (readHumData()*10); // Leemos humedad relativa 
+//----------------- Lectura de Temperatura Ambiente de Site -----------
+  crudeTempData = readTempData();  // Leemos temperatura
+//----------------- Lectura de Temperatura de Transmisor -------------- 
+  crudeThermopairData = readThermocoupleData();
+//----------------------------------------------------------------------
+  delay(50);
+  /*Serial.print(crudeHumData);
+  Serial.print("%RH ");
+  Serial.print(crudeTempData);
+  Serial.print("ºC TempSite  ");
+  Serial.print(crudeThermopairData);
+  Serial.println("ºC Tx  ");
+  Serial.println(devModule.bufer);*/
+  delay(100);
+ //---------------------------------------------------------------------- 
+  sendDataNextion(crudeThermopairData, crudeTempData, crudeHumData); // Envia variables a pantalla
+}
 #endif
