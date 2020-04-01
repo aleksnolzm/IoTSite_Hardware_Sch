@@ -14,7 +14,10 @@
 #include "nextionLibRoutine.h";
 /********************** GLOBAL SCOPE VARIABLES *************************/
 volatile bool flagUpdateDataCloud = false;  // Bandera para ejecutar la funcion de lectura de variables de sensores
+volatile bool statusDoor = false;
+volatile bool statusEnergy = false;
 
+int crudeStatusVars = 0; // Bandera para enviar notificacion de puerta y energia
 int humBuffer = 0;
 int tempBuffer = 0;
 float humVolts = 0;
@@ -22,6 +25,7 @@ float tempVolts = 0;
 uint8_t crudeTempData = 0; // Datos de Temperatura a 1byte
 uint16_t crudeHumData = 0; // Datos de Humedad a 2 bytes
 uint8_t crudeThermopairData = 0; // Datos de Temperatura de Termopar a 2bytes
+
 byte statusDoor = 0;
 byte statusAC = 1;
 
@@ -53,12 +57,9 @@ void initTransducers (void)
 }
 /****************************** MAIN READING SENSORS VARIABLES ******************************/
 void performUplink(void) 
-{
-  
+{ 
 //----------------- Lee Variables de entorno ---------------
- 
   readVariables();
-
 //----------------------------------------------------------------------
   Serial.println("Wait a moment please...");
   devModule.clearBuffer(); // Limpiamos buffer de Payload
@@ -67,6 +68,7 @@ void performUplink(void)
   devModule.addTwoBytes(crudeHumData); // Añadimos el valor leído al buffer
   devModule.addOneByte(crudeTempData); // Añadimos el valor leído al buffer 
   devModule.addOneByte(crudeThermopairData);
+  devModule.addOneByte(crudeStatusVars);
   
   Serial.print("Payload Status: ");
   Serial.println(devModule.bufer);
@@ -136,6 +138,8 @@ void readVariables(void){
   crudeThermopairData = readThermocoupleData();
 //----------------------------------------------------------------------
   delay(50);
+
+  crudeStatusVars = statusDoor + statusEnergy;
   /*Serial.print(crudeHumData);
   Serial.print("%RH ");
   Serial.print(crudeTempData);

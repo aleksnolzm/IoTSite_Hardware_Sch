@@ -21,11 +21,15 @@ void setup(void)
        Timer1.initialize(1000000);         // Dispara cada 1000ms = 1seg
        Timer1.attachInterrupt(triggerPayload); // Activa la interrupcion y la asocia a ISR_Blink TIMEON
 
-       attachInterrupt(digitalPinToInterrupt(2), sendForcedPayload, RISING);
-       //attachInterrupt(digitalPinToInterrupt(2), sendForcedPayload, FALLING);
+       //attachInterrupt(digitalPinToInterrupt(2), sendForcedPayload, RISING);
+       attachInterrupt(digitalPinToInterrupt(2), openDoor, FALLING);
+       attachInterrupt(digitalPinToInterrupt(2), closedDoor, RISING);
+       
+       attachInterrupt(digitalPinToInterrupt(3), fallEnergy, FALLING);
+       attachInterrupt(digitalPinToInterrupt(3), risingEnergy, RISING);
+
        initTransducers(); // Inicializamos a los sensores y el modulo Wisol
        Serial.begin(9600);
-
        pinMode(8, OUTPUT); //LED 
    }
 
@@ -39,6 +43,7 @@ void setup(void)
          flagUpdateDataCloud=false;
          interrupts();
       }
+
       while(flagUpdateDataCloud==false)
      {  digitalWrite(8,true);
          delay(20);
@@ -68,9 +73,31 @@ void setup(void)
       } 
       interrupts();
    }
-/**************** FUNCION PARA FORZAR ENVIO DE INFORMACION POR INTERRUPCION EXTERNA *************************/
-    void sendForcedPayload(){
+/**************** FUNCION PARA FORZAR ENVIO DE INFORMACION POR APERTURA DE PUERTA *************************/
+    void openDoor(){
       noInterrupts();
-      flagUpdateDataCloud=true;
+      flagUpdateDataCloud = true;
+      statusDoor = true;
       interrupts();
     }
+/**************** FUNCION PARA FORZAR ENVIO DE INFORMACION POR CERRADO DE PUERTA *************************/
+    void closedDoor(){
+      noInterrupts();
+      flagUpdateDataCloud = false;
+      statusDoor = false;
+      interrupts();
+    }
+/**************** FUNCION PARA FORZAR ENVIO DE INFORMACION POR CAIDA DE ENERGIA *************************/
+    void fallEnergy(){
+      noInterrupts();
+      flagUpdateDataCloud = true;
+      statusEnergy = true;
+      interrupts();
+    }
+/**************** FUNCION PARA FORZAR ENVIO DE INFORMACION POR CAIDA DE ENERGIA *************************/
+   risingEnergy(){
+      noInterrupts();
+      flagUpdateDataCloud = false;
+      statusEnergy = false;
+      interrupts();
+   }
