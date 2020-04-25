@@ -14,8 +14,8 @@
 #include "nextionLibRoutine.h";
 /********************** GLOBAL SCOPE VARIABLES *************************/
 volatile bool flagUpdateDataCloud = false;  // Bandera para ejecutar la funcion de lectura de variables de sensores
-volatile bool statusDoor = false;
-volatile bool statusEnergy = false;
+volatile int statusDoor = 0;
+volatile int statusEnergy = 0;
 
 int crudeStatusVars = 0; // Bandera para enviar notificacion de puerta y energia
 int humBuffer = 0;
@@ -25,9 +25,6 @@ float tempVolts = 0;
 uint8_t crudeTempData = 0; // Datos de Temperatura a 1byte
 uint16_t crudeHumData = 0; // Datos de Humedad a 2 bytes
 uint8_t crudeThermopairData = 0; // Datos de Temperatura de Termopar a 2bytes
-
-byte statusDoor = 0;
-byte statusAC = 1;
 
 volatile float tempThermopair = 0; //  Datos de Temperatura de termopar
 /********************* PUERTOS DIGITALES SPI **************************/
@@ -101,7 +98,7 @@ float readHumData (void)
 float readTempData (void)
 {
   tempBuffer = analogRead(tempPort);
-  delay(50);
+  delay(150);
    
   tempVolts = tempBuffer*0.00488759; //85532747;
     
@@ -132,12 +129,19 @@ void readVariables(void){
 
   //----------------- Lectura de Humedad Relativa de Site ---------------
   crudeHumData = (readHumData()*10); // Leemos humedad relativa 
+  delay(100);
 //----------------- Lectura de Temperatura Ambiente de Site -----------
   crudeTempData = readTempData();  // Leemos temperatura
 //----------------- Lectura de Temperatura de Transmisor -------------- 
   crudeThermopairData = readThermocoupleData();
 //----------------------------------------------------------------------
-  delay(50);
+  delay(100);
+   if(digitalRead(2)){
+     statusDoor = 16;
+   }
+  if(digitalRead(3)){
+    statusEnergy = 1; 
+  }
 
   crudeStatusVars = statusDoor + statusEnergy;
   /*Serial.print(crudeHumData);
@@ -147,6 +151,7 @@ void readVariables(void){
   Serial.print(crudeThermopairData);
   Serial.println("ºC Tx  ");
   Serial.println(devModule.bufer);*/
+  //Serial.println(crudeStatusVars);
   delay(100);
  //---------------------------------------------------------------------- 
   sendDataNextion(crudeThermopairData, crudeTempData, crudeHumData); // Envia variables a pantalla

@@ -20,13 +20,11 @@ void setup(void)
        
        Timer1.initialize(1000000);         // Dispara cada 1000ms = 1seg
        Timer1.attachInterrupt(triggerPayload); // Activa la interrupcion y la asocia a ISR_Blink TIMEON
-
+       pinMode(2, INPUT);
+       pinMode(3, INPUT);
        //attachInterrupt(digitalPinToInterrupt(2), sendForcedPayload, RISING);
-       attachInterrupt(digitalPinToInterrupt(2), openDoor, FALLING);
-       attachInterrupt(digitalPinToInterrupt(2), closedDoor, RISING);
-       
+       attachInterrupt(digitalPinToInterrupt(2), openDoor, FALLING;
        attachInterrupt(digitalPinToInterrupt(3), fallEnergy, FALLING);
-       attachInterrupt(digitalPinToInterrupt(3), risingEnergy, RISING);
 
        initTransducers(); // Inicializamos a los sensores y el modulo Wisol
        Serial.begin(9600);
@@ -77,27 +75,14 @@ void setup(void)
     void openDoor(){
       noInterrupts();
       flagUpdateDataCloud = true;
-      statusDoor = true;
+      statusDoor = 0;
       interrupts();
     }
-/**************** FUNCION PARA FORZAR ENVIO DE INFORMACION POR CERRADO DE PUERTA *************************/
-    void closedDoor(){
-      noInterrupts();
-      flagUpdateDataCloud = false;
-      statusDoor = false;
-      interrupts();
-    }
+
 /**************** FUNCION PARA FORZAR ENVIO DE INFORMACION POR CAIDA DE ENERGIA *************************/
     void fallEnergy(){
       noInterrupts();
       flagUpdateDataCloud = true;
-      statusEnergy = true;
+      statusEnergy = 0;
       interrupts();
     }
-/**************** FUNCION PARA FORZAR ENVIO DE INFORMACION POR CAIDA DE ENERGIA *************************/
-   risingEnergy(){
-      noInterrupts();
-      flagUpdateDataCloud = false;
-      statusEnergy = false;
-      interrupts();
-   }
